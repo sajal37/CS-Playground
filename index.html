@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="CS Playground — an interactive consequence engine for learning computer science concepts through hands-on experimentation."
+    />
+    <title>CS Playground</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="cursor-glow" id="cursorGlow"></div>
+    net start MySQL80
+
+    <div class="glitch-overlay" id="glitchOverlay"></div>
+
+    <div class="sys-flash" id="sysFlash"></div>
+
+    <div class="inline-reaction" id="inlineReaction"></div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-logo" id="navLogo">
+        <span class="logo-bracket">{</span>
+        <span class="logo-text">CS</span>
+        <span class="logo-bracket">}</span>
+      </div>
+      <div class="nav-links">
+        <a href="#concepts" class="nav-link">Concepts</a>
+        <a href="#philosophy" class="nav-link">Rules</a>
+      </div>
+    </nav>
+
+    <main class="scroll-container" id="scrollContainer">
+      <section class="screen hero-screen" id="hero">
+        <div class="hero-content">
+          <div class="boot-sequence" id="bootSequence">
+            <div class="boot-lines" id="bootLines"></div>
+          </div>
+
+          <div class="hero-tagline" id="heroTagline" style="opacity: 0">
+            <h1 class="hero-line line-1">Break it.</h1>
+            <span class="hero-line line-2">Then you'll get it.</span>
+          </div>
+          <div class="hero-subline" id="heroSubline" style="opacity: 0">
+            click something. see what happens.
+          </div>
+          <div class="hero-cta" id="heroCta" style="opacity: 0">
+            <button class="btn-primary btn-danger" id="heroBtn">
+              <span class="btn-text">Break something</span>
+              <span class="btn-icon">→</span>
+            </button>
+            <p class="hero-whisper" id="heroWhisper">go on.</p>
+          </div>
+        </div>
+        <div class="hero-ambient">
+          <div class="ambient-grid" id="ambientGrid"></div>
+        </div>
+        <div class="scroll-hint" id="scrollHint" style="opacity: 0">
+          <span class="scroll-hint-text">45 concepts. ready when you are.</span>
+          <span class="scroll-hint-arrow">↓</span>
+        </div>
+      </section>
+
+      <section class="screen concepts-screen" id="concepts">
+        <div class="concepts-content">
+          <h2 class="concepts-title" id="conceptsTitle">Pick your poison.</h2>
+          <div class="system-pulse" id="systemPulse">
+            <span class="pulse-dot"></span>
+            <span class="pulse-label">system active</span>
+            <span class="pulse-bar"><span class="pulse-bar-fill"></span></span>
+          </div>
+          <p class="concepts-subtitle" id="conceptsSubtitle">
+            One concept. One consequence. No lectures.
+          </p>
+
+          <div class="category-filter" id="categoryFilter"></div>
+
+          <div class="concepts-grid" id="conceptsGrid"></div>
+
+          <div class="concepts-count" id="conceptsCount"></div>
+
+          <div class="concepts-whisper" id="conceptsWhisper">
+            <span class="whisper-text">this is just the start.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen philosophy-screen" id="philosophy">
+        <div class="philosophy-content">
+          <h2 class="philosophy-title" id="philTitle">The rules.</h2>
+          <p class="philosophy-threat" id="philThreat">Break these and we'll know.</p>
+          <div class="rules-list" id="rulesList">
+            <div class="rule-item" data-rule="1">
+              <div class="rule-main">
+                <span class="rule-number">01</span>
+                <span class="rule-text"
+                  >Click it. Watch it react. <em>Now</em> you understand.</span
+                >
+              </div>
+              <div class="rule-demo" id="ruleDemo1">
+                <button class="rule-demo-btn" id="ruleDemoBtn1">click me</button>
+                <span class="rule-demo-result" id="ruleDemoResult1"></span>
+              </div>
+              <p class="rule-depth">
+                Every concept starts with action. You cause it, the system reacts, then the
+                explanation earns its place.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="2">
+              <div class="rule-main">
+                <span class="rule-number">02</span>
+                <span class="rule-text"
+                  >Every concept has OFF and ON. You'll <em>feel</em> the difference.</span
+                >
+              </div>
+              <div class="rule-demo" id="ruleDemo2">
+                <div class="rule-toggle" id="ruleToggle2">
+                  <span class="toggle-label toggle-off-label">OFF</span>
+                  <button
+                    class="toggle-switch"
+                    id="toggleSwitch2"
+                    role="switch"
+                    aria-checked="false"
+                  >
+                    <span class="toggle-knob"></span>
+                  </button>
+                  <span class="toggle-label toggle-on-label">ON</span>
+                </div>
+                <span class="rule-demo-result" id="ruleDemoResult2">slow. painful.</span>
+              </div>
+              <p class="rule-depth">
+                Toggle anything. See the before. See the after. Intuition comes from contrast, not
+                explanation.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="3">
+              <div class="rule-main">
+                <span class="rule-number">03</span>
+                <span class="rule-text">Break things. We dare you.</span>
+              </div>
+              <div class="rule-demo" id="ruleDemo3">
+                <button class="rule-demo-btn rule-demo-danger" id="ruleDemoBtn3">
+                  break this rule
+                </button>
+                <span class="rule-demo-result" id="ruleDemoResult3"></span>
+              </div>
+              <p class="rule-depth">
+                Failure here is designed, not dangerous. Break it, recover, try again. That's the
+                loop.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="4">
+              <div class="rule-main">
+                <span class="rule-number">04</span>
+                <span class="rule-text"
+                  >If something changed, you see it change. No trust issues.</span
+                >
+              </div>
+              <p class="rule-depth">
+                Internal changes become external visuals. Meters move, colors shift, timing changes.
+                If you can't see it, it doesn't count.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="5">
+              <div class="rule-main">
+                <span class="rule-number">05</span>
+                <span class="rule-text">No buzzwords. Unless we prove them first.</span>
+              </div>
+              <p class="rule-depth">
+                "Scalable" means nothing until you watch a system break under load. Words earn their
+                place here.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="6">
+              <div class="rule-main">
+                <span class="rule-number">06</span>
+                <span class="rule-text">One idea per screen. That's the law.</span>
+              </div>
+              <p class="rule-depth">
+                No cramming. One concept, one interaction, one takeaway. Depth comes from stacking,
+                not stuffing.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="7">
+              <div class="rule-main">
+                <span class="rule-number">07</span>
+                <span class="rule-text"
+                  >Simple first. Technical later. <em>You</em> choose depth.</span
+                >
+              </div>
+              <p class="rule-depth">
+                Every concept has two layers. The intuition you need, and the details you want. You
+                control when to go deeper.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="8">
+              <div class="rule-main">
+                <span class="rule-number">08</span>
+                <span class="rule-text">Reset anything. Anytime. Fear kills learning.</span>
+              </div>
+              <div class="rule-demo" id="ruleDemo8">
+                <button class="rule-demo-btn rule-demo-reset" id="ruleDemoBtn8">
+                  ↺ reset all demos
+                </button>
+                <span class="rule-demo-result" id="ruleDemoResult8"></span>
+              </div>
+              <p class="rule-depth">
+                Every state is reversible. Experiment without anxiety. Reset is not failure — reset
+                is iteration.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="9">
+              <div class="rule-main">
+                <span class="rule-number">09</span>
+                <span class="rule-text">Nothing here is fake. Every consequence is real.</span>
+              </div>
+              <p class="rule-depth">
+                No mocked demos. Queries actually run slow. Locks actually freeze. The pain is real
+                so the learning sticks.
+              </p>
+            </div>
+            <div class="rule-item" data-rule="10">
+              <div class="rule-main">
+                <span class="rule-number">10</span>
+                <span class="rule-text">This isn't a tutorial. It assumes you're smart.</span>
+              </div>
+              <p class="rule-depth">
+                No disclaimers. No spoon-feeding. You're here because you're curious and capable.
+                Act like it.
+              </p>
+            </div>
+          </div>
+          <div class="philosophy-footer" id="philFooter">
+            <p class="philosophy-line">This isn't a course.</p>
+            <p class="philosophy-line philosophy-bold">It's a consequence engine.</p>
+            <div class="philosophy-cursor" id="philCursor">_</div>
+            <button class="btn-primary btn-explore" id="exploreBtn">
+              <span class="btn-text">Start exploring</span>
+              <span class="btn-icon">↑</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

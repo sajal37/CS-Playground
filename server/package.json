@@ -1,0 +1,25 @@
+{
+  "name": "cs-playground-server",
+  "version": "1.0.0",
+  "description": "Backend for CS Playground — real MySQL queries",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "test": "node tests/smoke.test.js",
+    "check": "npm run lint && npm run test"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "mysql2": "^3.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.8.0",
+    "eslint": "^9.8.0",
+    "prettier": "^3.3.3"
+  }
+}

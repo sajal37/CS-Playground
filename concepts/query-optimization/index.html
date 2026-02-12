@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Query Optimization — CS Playground</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="reaction" id="reaction"></div>
+
+    <nav class="nav">
+      <a href="../../index.html" class="nav-back" id="navBack">← back</a>
+      <div class="nav-logo"><span class="bracket">{</span>CS<span class="bracket">}</span></div>
+      <span class="nav-concept">query optimization</span>
+    </nav>
+
+    <main class="main" id="main">
+      <section class="stage" id="stageBoot">
+        <div class="terminal" id="terminal"></div>
+      </section>
+
+      <section class="stage hidden" id="stageSchema">
+        <h1 class="headline">100K users. 200K orders.<br />5 indexes.</h1>
+        <p class="sub">
+          Every column you'd search is indexed.<br />The indexes are fine.
+          <strong>Your queries aren't.</strong>
+        </p>
+        <div class="schema-box">
+          <div class="schema-table">
+            <span class="schema-name">users</span>
+            <span class="schema-cols">id · name · email · city · created_at</span>
+            <span class="schema-idx">idx: city, created_at, name</span>
+          </div>
+          <div class="schema-table">
+            <span class="schema-name">orders</span>
+            <span class="schema-cols">id · user_id · amount · product · order_date</span>
+            <span class="schema-idx">idx: user_id, order_date</span>
+          </div>
+        </div>
+        <p class="whisper">three traps ahead.</p>
+      </section>
+
+      <section class="stage hidden" id="r1Challenge">
+        <div class="round-header"><span class="round-num">01</span></div>
+        <h2 class="headline-sm">The function trap.</h2>
+        <p class="sub">"How many users signed up in 2025?"</p>
+        <p class="sub dim">Index on <code>created_at</code>? Already there.</p>
+        <div class="sql-block">
+          <span class="sql-label">your query</span>
+          <pre
+            class="sql-code"
+          ><span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> users
+<span class="kw">WHERE</span> <span class="fn">YEAR</span>(created_at) = <span class="num">2025</span>;</pre>
+        </div>
+        <button class="btn btn-danger" id="btnR1Bad">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </section>
+
+      <section class="stage hidden" id="r1Slow">
+        <div class="result-display">
+          <span class="result-time" id="r1BadTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-slow" id="r1BadBar"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan" id="r1BadPlan"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="r1Fix">
+        <h2 class="headline-sm">Same question. Smarter SQL.</h2>
+        <div class="sql-block accent">
+          <span class="sql-label">rewritten</span>
+          <pre
+            class="sql-code"
+          ><span class="kw">SELECT COUNT</span>(*) <span class="kw">FROM</span> users
+<span class="kw">WHERE</span> created_at &gt;= <span class="str">'2025-01-01'</span>
+  <span class="kw">AND</span> created_at &lt; <span class="str">'2026-01-01'</span>;</pre>
+        </div>
+        <button class="btn btn-primary" id="btnR1Good">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </section>
+
+      <section class="stage hidden" id="r1Fast">
+        <div class="result-display">
+          <span class="result-time result-fast" id="r1GoodTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-fast" id="r1GoodBar"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan plan-good" id="r1GoodPlan"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="r1Compare">
+        <div class="comparison">
+          <div class="comp-row">
+            <span class="comp-label">YEAR()</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-slow" id="r1BarSlow"></div>
+            </div>
+            <span class="comp-val" id="r1ValSlow"></span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label">Range</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-fast" id="r1BarFast"></div>
+            </div>
+            <span class="comp-val" id="r1ValFast"></span>
+          </div>
+        </div>
+        <p class="speedup" id="r1Speedup"></p>
+        <p class="round-lesson">
+          Wrapping a column in a function makes the index invisible.<br />MySQL can't use what it
+          can't see.
+        </p>
+      </section>
+
+      <section class="stage hidden" id="r2Challenge">
+        <div class="round-header"><span class="round-num">02</span></div>
+        <h2 class="headline-sm">The wildcard trap.</h2>
+        <p class="sub">"Find all users named Aarav."</p>
+        <p class="sub dim">Index on <code>name</code>? Already there.</p>
+        <div class="sql-block">
+          <span class="sql-label">your query</span>
+          <pre class="sql-code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> users
+<span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="str">'%Aarav%'</span>;</pre>
+        </div>
+        <button class="btn btn-danger" id="btnR2Bad">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </section>
+
+      <section class="stage hidden" id="r2Slow">
+        <div class="result-display">
+          <span class="result-time" id="r2BadTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-slow" id="r2BadBar"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan" id="r2BadPlan"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="r2Fix">
+        <h2 class="headline-sm">Same results. Smarter pattern.</h2>
+        <div class="sql-block accent">
+          <span class="sql-label">rewritten</span>
+          <pre class="sql-code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> users
+<span class="kw">WHERE</span> name <span class="kw">LIKE</span> <span class="str">'Aarav%'</span>;</pre>
+        </div>
+        <button class="btn btn-primary" id="btnR2Good">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </section>
+
+      <section class="stage hidden" id="r2Fast">
+        <div class="result-display">
+          <span class="result-time result-fast" id="r2GoodTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-fast" id="r2GoodBar"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan plan-good" id="r2GoodPlan"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="r2Compare">
+        <div class="comparison">
+          <div class="comp-row">
+            <span class="comp-label">%Aarav%</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-slow" id="r2BarSlow"></div>
+            </div>
+            <span class="comp-val" id="r2ValSlow"></span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label">Aarav%</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-fast" id="r2BarFast"></div>
+            </div>
+            <span class="comp-val" id="r2ValFast"></span>
+          </div>
+        </div>
+        <p class="speedup" id="r2Speedup"></p>
+        <p class="round-lesson">
+          A leading wildcard forces a full table scan.<br />Put the wildcard at the end and the
+          index kicks in.
+        </p>
+      </section>
+
+      <section class="stage hidden" id="r3Challenge">
+        <div class="round-header"><span class="round-num">03</span></div>
+        <h2 class="headline-sm">The no-limit trap.</h2>
+        <p class="sub">"Get recent orders."</p>
+        <p class="sub dim">Index on <code>order_date</code>? Already there.</p>
+        <div class="sql-block">
+          <span class="sql-label">your query</span>
+          <pre class="sql-code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> order_date <span class="kw">DESC</span>;</pre>
+        </div>
+        <button class="btn btn-danger" id="btnR3Bad">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </section>
+
+      <section class="stage hidden" id="r3Slow">
+        <div class="result-display">
+          <span class="result-time" id="r3BadTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-slow" id="r3BadBar"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan" id="r3BadPlan"></span>
+          <span class="result-extra" id="r3BadExtra"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="r3Fix">
+        <h2 class="headline-sm">You only needed 20.</h2>
+        <div class="sql-block accent">
+          <span class="sql-label">rewritten</span>
+          <pre class="sql-code"><span class="kw">SELECT</span> * <span class="kw">FROM</span> orders
+<span class="kw">ORDER BY</span> order_date <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> <span class="num">20</span>;</pre>
+        </div>
+        <button class="btn btn-primary" id="btnR3Good">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </section>
+
+      <section class="stage hidden" id="r3Fast">
+        <div class="result-display">
+          <span class="result-time result-fast" id="r3GoodTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-fast" id="r3GoodBar"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan plan-good" id="r3GoodPlan"></span>
+          <span class="result-extra" id="r3GoodExtra"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="r3Compare">
+        <div class="comparison">
+          <div class="comp-row">
+            <span class="comp-label">No limit</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-slow" id="r3BarSlow"></div>
+            </div>
+            <span class="comp-val" id="r3ValSlow"></span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label">LIMIT 20</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-fast" id="r3BarFast"></div>
+            </div>
+            <span class="comp-val" id="r3ValFast"></span>
+          </div>
+        </div>
+        <p class="speedup" id="r3Speedup"></p>
+        <p class="round-lesson">
+          Without LIMIT, MySQL fetches every row, sorts them all, sends them all.<br />200,000 rows
+          when you needed 20.
+        </p>
+      </section>
+
+      <section class="stage hidden" id="stagePlayground">
+        <h2 class="headline-sm">Playground.</h2>
+        <p class="sub">Pick a query pair. Run both. See the difference live.</p>
+        <div class="pg-controls">
+          <select class="pg-select" id="pgSelect">
+            <option value="0">Function: YEAR() vs range</option>
+            <option value="1">Wildcard: %prefix vs prefix%</option>
+            <option value="2">Limit: all rows vs LIMIT 20</option>
+            <option value="3">Date function on orders</option>
+            <option value="4">Wildcard: %keyboard% vs exact match</option>
+          </select>
+        </div>
+        <div class="pg-pair">
+          <div class="pg-card">
+            <span class="pg-label bad-label">slow</span>
+            <pre class="pg-sql" id="pgBadSql"></pre>
+            <button class="btn btn-danger btn-sm" id="pgRunBad">Run</button>
+            <div class="pg-result hidden" id="pgBadResult">
+              <span class="pg-time" id="pgBadTime">--</span><span class="pg-ms">ms</span>
+              <span class="pg-plan" id="pgBadPlan"></span>
+            </div>
+          </div>
+          <div class="pg-card">
+            <span class="pg-label good-label">fast</span>
+            <pre class="pg-sql" id="pgGoodSql"></pre>
+            <button class="btn btn-primary btn-sm" id="pgRunGood">Run</button>
+            <div class="pg-result hidden" id="pgGoodResult">
+              <span class="pg-time pg-time-fast" id="pgGoodTime">--</span
+              ><span class="pg-ms">ms</span>
+              <span class="pg-plan plan-good" id="pgGoodPlan"></span>
+            </div>
+          </div>
+        </div>
+        <div class="pg-compare hidden" id="pgCompare">
+          <div class="comparison">
+            <div class="comp-row">
+              <span class="comp-label">Slow</span>
+              <div class="comp-track">
+                <div class="comp-bar comp-slow" id="pgBarSlow"></div>
+              </div>
+              <span class="comp-val" id="pgValSlow"></span>
+            </div>
+            <div class="comp-row">
+              <span class="comp-label">Fast</span>
+              <div class="comp-track">
+                <div class="comp-bar comp-fast" id="pgBarFast"></div>
+              </div>
+              <span class="comp-val" id="pgValFast"></span>
+            </div>
+          </div>
+          <p class="speedup" id="pgSpeedup"></p>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="stageTakeaway">
+        <p class="takeaway">
+          Your query isn't slow because of the data.<br /><strong
+            >It's slow because of how you asked.</strong
+          >
+        </p>
+        <p class="takeaway-sub">
+          Indexes only work if your SQL lets them.<br />Functions, wildcards, and missing limits are
+          silent killers.
+        </p>
+        <a href="../../index.html" class="btn btn-ghost btn-back">← back to concepts</a>
+      </section>
+    </main>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>

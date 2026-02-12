@@ -1,0 +1,33 @@
+export const $ = (selector, root = document) => root.querySelector(selector);
+export const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+export const refs = {
+  cursorGlow: $("#cursorGlow"),
+  glitchOverlay: $("#glitchOverlay"),
+  sysFlash: $("#sysFlash"),
+  nav: $("#nav"),
+  navLogo: $("#navLogo"),
+  bootSequence: $("#bootSequence"),
+  bootLines: $("#bootLines"),
+  heroTagline: $("#heroTagline"),
+  heroSubline: $("#heroSubline"),
+  heroCta: $("#heroCta"),
+  heroBtn: $("#heroBtn"),
+  heroWhisper: $("#heroWhisper"),
+  ambientGrid: $("#ambientGrid"),
+  scrollHint: $("#scrollHint"),
+  scrollContainer: $("#scrollContainer"),
+  conceptsTitle: $("#conceptsTitle"),
+  conceptsSubtitle: $("#conceptsSubtitle"),
+  conceptsWhisper: $("#conceptsWhisper"),
+  conceptsGrid: $("#conceptsGrid"),
+  categoryFilter: $("#categoryFilter"),
+  conceptsCount: $("#conceptsCount"),
+  systemPulse: $("#systemPulse"),
+  philTitle: $("#philTitle"),
+  philThreat: $("#philThreat"),
+  philFooter: $("#philFooter"),
+  rulesList: $("#rulesList"),
+  exploreBtn: $("#exploreBtn"),
+  inlineReaction: $("#inlineReaction"),
+};

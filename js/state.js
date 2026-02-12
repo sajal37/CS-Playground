@@ -1,0 +1,36 @@
+export const state = {
+  booted: false,
+  heroClicked: false,
+  heroHovers: 0,
+  currentScreen: "hero",
+  mouseIdle: false,
+  idleTimer: null,
+  lastMouseMove: Date.now(),
+  glitchCooldown: false,
+  lockedClickCount: {},
+  sessionStart: Date.now(),
+  interactions: 0,
+  speedrun: false,
+  heroTextChanged: false,
+  emotionalPhase: "curiosity",
+  momentumHits: [5, 12, 20, 35],
+  momentumIndex: 0,
+  lastReaction: "",
+  lastReactionMood: "",
+  heroHoverTimer: null,
+  reactionTimer: null,
+  lastScrollY: 0,
+  scrollSpeed: 0,
+  totalLockedClicks: 0,
+  categoriesExplored: new Set(),
+  rulesViewed: 0,
+  returnVisitor: !!localStorage.getItem("cs-playground-visited"),
+  activeCategory: "all",
+  conceptsRevealed: false,
+  philRevealed: false,
+  screenEnteredAt: Date.now(),
+};
+
+export function setEmotionalPhase(phase) {
+  state.emotionalPhase = phase;
+}

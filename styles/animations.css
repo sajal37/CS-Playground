@@ -1,0 +1,306 @@
+@keyframes glitch-flash {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(99, 102, 241, 0.03) 2px,
+      rgba(99, 102, 241, 0.03) 4px
+    );
+    transform: translateX(-2px);
+  }
+  40% {
+    opacity: 0;
+    transform: translateX(3px);
+  }
+  60% {
+    opacity: 0.8;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 1px,
+      rgba(239, 68, 68, 0.04) 1px,
+      rgba(239, 68, 68, 0.04) 3px
+    );
+    transform: translateX(-1px) skewX(-0.5deg);
+  }
+  80% {
+    opacity: 0;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes flash-in-out {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+    filter: blur(4px);
+  }
+  15% {
+    opacity: 0.6;
+    transform: translate(-50%, -50%) scale(1);
+    filter: blur(0);
+  }
+  70% {
+    opacity: 0.6;
+  }
+  100% {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 var(--accent-green-glow);
+  }
+  50% {
+    opacity: 0.7;
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+@keyframes pulse-sweep {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleX(0);
+    opacity: 0.3;
+  }
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% center;
+  }
+  50% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes ambient-drift {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes scroll-bounce {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateX(-50%) translateY(10px);
+    opacity: 1;
+  }
+}
+
+@keyframes card-glitch-scan {
+  0% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(200px);
+    opacity: 0;
+  }
+}
+
+@keyframes locked-reject {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateX(-6px) scale(1);
+  }
+  50% {
+    transform: translateX(6px) scale(1);
+  }
+  75% {
+    transform: translateX(-3px) scale(1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-5px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes nav-nervous {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: translateX(-2px) rotate(-1deg);
+  }
+  40% {
+    transform: translateX(2px) rotate(0.5deg);
+  }
+  60% {
+    transform: translateX(-1px) rotate(-0.3deg);
+  }
+  80% {
+    transform: translateX(1px);
+  }
+}
+
+@keyframes shake-heavy {
+  0% {
+    transform: translate(0, 0) rotate(0);
+  }
+  10% {
+    transform: translate(-8px, 2px) rotate(-0.5deg);
+  }
+  20% {
+    transform: translate(6px, -3px) rotate(0.5deg);
+  }
+  30% {
+    transform: translate(-10px, 1px) rotate(-0.3deg);
+  }
+  40% {
+    transform: translate(8px, -1px) rotate(0.3deg);
+  }
+  50% {
+    transform: translate(-6px, 3px) rotate(-0.2deg);
+  }
+  60% {
+    transform: translate(4px, -2px) rotate(0.2deg);
+  }
+  70% {
+    transform: translate(-3px, 1px) rotate(0);
+  }
+  80% {
+    transform: translate(2px, 0);
+  }
+  90% {
+    transform: translate(-1px, 0);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes nav-scan {
+  to {
+    left: 100%;
+  }
+}
+
+@keyframes fade-in-safe {
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}
+
+.shake {
+  animation: shake 0.5s ease;
+}
+
+.shake-heavy {
+  animation: shake-heavy 0.7s ease forwards;
+}
+
+.nav-logo.nervous {
+  animation: nav-nervous 0.6s ease;
+}
+
+.speedrun {
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.speedrun .boot-line,
+.speedrun .rule-item,
+.speedrun .concept-card {
+  transition-duration: 0.1s !important;
+}
+
+.concepts-title,
+.concepts-subtitle,
+.category-filter,
+.concept-card,
+.concepts-whisper,
+.philosophy-title,
+.philosophy-threat,
+.rule-item,
+.philosophy-footer {
+  animation: fade-in-safe 0.6s var(--ease-out) 5s forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .scroll-container {
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+  }
+
+  .concept-card,
+  .rule-item,
+  .philosophy-title,
+  .philosophy-threat,
+  .philosophy-footer {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

@@ -1,0 +1,7 @@
+module.exports = {
+  extends: ["stylelint-config-standard"],
+  rules: {
+    "declaration-empty-line-before": null,
+  },
+  ignoreFiles: ["**/node_modules/**"],
+};

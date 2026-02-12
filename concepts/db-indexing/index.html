@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DB Indexing — CS Playground</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="reaction" id="reaction"></div>
+
+    <nav class="nav">
+      <a href="../../index.html" class="nav-back" id="navBack">← back</a>
+      <div class="nav-logo"><span class="bracket">{</span>CS<span class="bracket">}</span></div>
+      <span class="nav-concept">db indexing</span>
+    </nav>
+
+    <main class="main" id="main">
+      <section class="stage" id="stageBoot">
+        <div class="terminal" id="terminal"></div>
+      </section>
+
+      <section class="stage hidden" id="stageChallenge">
+        <h1 class="headline">100,000 users.<br />One query.</h1>
+        <p class="sub">Find everyone in Mumbai.</p>
+        <div class="sql-block">
+          <span class="sql-label">query</span>
+          <pre
+            class="sql-code"
+          ><span class="kw">SELECT</span> * <span class="kw">FROM</span> users <span class="kw">WHERE</span> city = <span class="str">'Mumbai'</span>;</pre>
+        </div>
+        <button class="btn btn-danger" id="btnExecute">
+          <span class="btn-text">Execute</span>
+          <span class="btn-arrow">→</span>
+        </button>
+        <p class="whisper" id="challengeWhisper">go on.</p>
+      </section>
+
+      <section class="stage hidden" id="stageSlow">
+        <div class="result-header">
+          <span class="result-time" id="slowTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-slow" id="barSlow"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan" id="slowPlan"></span>
+          <span class="result-rows" id="slowRows"></span>
+        </div>
+        <div id="slowTable"></div>
+        <p class="result-reaction" id="slowReaction"></p>
+      </section>
+
+      <section class="stage hidden" id="stageFix">
+        <h2 class="headline-sm">What if one line could fix this?</h2>
+        <div class="sql-block accent">
+          <span class="sql-label">the fix</span>
+          <pre
+            class="sql-code"
+          ><span class="kw">CREATE INDEX</span> idx_city <span class="kw">ON</span> users(city);</pre>
+        </div>
+        <button class="btn btn-primary" id="btnIndex">
+          <span class="btn-text">Create Index</span>
+        </button>
+        <p class="whisper">one line.</p>
+      </section>
+
+      <section class="stage hidden" id="stageRerun">
+        <p class="index-created">Index created. <span id="indexTime">--</span>ms.</p>
+        <button class="btn btn-danger" id="btnRerun">
+          <span class="btn-text">Execute Again</span>
+          <span class="btn-arrow">→</span>
+        </button>
+        <p class="whisper">same query. same data.</p>
+      </section>
+
+      <section class="stage hidden" id="stageFast">
+        <div class="result-header">
+          <span class="result-time result-time-fast" id="fastTime">--</span>
+          <span class="result-ms">ms</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar bar-fast" id="barFast"></div>
+        </div>
+        <div class="result-meta">
+          <span class="result-plan result-plan-good" id="fastPlan"></span>
+          <span class="result-rows" id="fastRows"></span>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="stageCompare">
+        <h2 class="headline-sm">The difference.</h2>
+        <div class="comparison">
+          <div class="comp-row">
+            <span class="comp-label">Without index</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-slow" id="compSlow"></div>
+            </div>
+            <span class="comp-val" id="compSlowVal"></span>
+          </div>
+          <div class="comp-row">
+            <span class="comp-label">With index</span>
+            <div class="comp-track">
+              <div class="comp-bar comp-fast" id="compFast"></div>
+            </div>
+            <span class="comp-val" id="compFastVal"></span>
+          </div>
+        </div>
+        <p class="speedup" id="speedup"></p>
+      </section>
+
+      <section class="stage hidden" id="stageExplain">
+        <h2 class="headline-sm">What just happened?</h2>
+        <p class="explain-simple">
+          Without an index, the database reads <em>every single row</em> looking for matches. With
+          an index, it jumps straight to the answer.
+        </p>
+        <p class="explain-analogy">
+          Like a book with no table of contents — you'd read every page to find one topic. An index
+          is that table of contents.
+        </p>
+        <details class="deeper">
+          <summary>go deeper →</summary>
+          <div class="deeper-body">
+            <p>
+              A database index creates a <strong>B-tree</strong> — a sorted, balanced tree structure
+              — on the column you choose.
+            </p>
+            <p>
+              When you query
+              <code>WHERE city = 'Mumbai'</code>:
+            </p>
+            <ul>
+              <li>
+                <strong>Without index:</strong> Full table scan. Read all 100,000 rows. Check each
+                one. O(n).
+              </li>
+              <li>
+                <strong>With index:</strong> B-tree lookup. Jump to 'Mumbai' in the sorted tree.
+                O(log n).
+              </li>
+            </ul>
+            <p><strong>The trade-off:</strong></p>
+            <ul>
+              <li>Indexes use extra storage (~10-30% of table size)</li>
+              <li>Every INSERT/UPDATE/DELETE must also update the index</li>
+              <li>Too many indexes slow down writes</li>
+            </ul>
+            <p><strong>Rule of thumb:</strong> Index what you search. Don't index everything.</p>
+          </div>
+        </details>
+      </section>
+
+      <section class="stage hidden" id="stagePlayground">
+        <h2 class="headline-sm">Your turn.</h2>
+        <p class="sub">Toggle indexes. Change queries. Break things.</p>
+
+        <div class="pg-controls">
+          <div class="pg-section">
+            <h3 class="pg-label">Indexes</h3>
+            <div class="pg-toggles" id="pgToggles">
+              <button class="pg-toggle active" data-col="city">city ✓</button>
+              <button class="pg-toggle" data-col="name">name</button>
+              <button class="pg-toggle" data-col="created_at">created_at</button>
+            </div>
+          </div>
+
+          <div class="pg-section">
+            <h3 class="pg-label">Query</h3>
+            <select class="pg-select" id="pgQuery">
+              <option value="city">WHERE city = 'Mumbai'</option>
+              <option value="name">WHERE name LIKE 'Aarav%'</option>
+              <option value="date">WHERE created_at > '2025-01-01'</option>
+              <option value="compound">WHERE city = 'Mumbai' AND created_at > '2024-06-01'</option>
+            </select>
+            <pre class="pg-sql" id="pgSqlPreview">SELECT * FROM users WHERE city = 'Mumbai';</pre>
+          </div>
+
+          <button class="btn btn-danger pg-run-btn" id="btnPgRun">
+            <span class="btn-text">Execute</span>
+            <span class="btn-arrow">→</span>
+          </button>
+        </div>
+
+        <div class="pg-results hidden" id="pgResults">
+          <div class="pg-result-header">
+            <span class="pg-result-time" id="pgTime">--</span>
+            <span class="pg-result-ms">ms</span>
+          </div>
+          <div class="bar-track">
+            <div class="bar" id="pgBar"></div>
+          </div>
+          <div class="pg-result-meta" id="pgMeta"></div>
+        </div>
+
+        <div class="pg-history" id="pgHistory"></div>
+
+        <button class="btn btn-ghost" id="btnReset">Reset Everything</button>
+      </section>
+
+      <section class="stage hidden" id="stageWrite">
+        <h2 class="headline-sm">The trade-off.</h2>
+        <p class="sub">Indexes speed up reads. But what about writes?</p>
+        <div class="write-demo">
+          <button class="btn btn-danger" id="btnWriteTest">
+            <span class="btn-text">Insert 5,000 rows</span>
+            <span class="btn-arrow">→</span>
+          </button>
+          <div class="write-results hidden" id="writeResults">
+            <div class="write-row">
+              <span class="write-label">Without indexes</span>
+              <div class="comp-track">
+                <div class="comp-bar comp-fast" id="writeBarWithout" style="width: 0"></div>
+              </div>
+              <span class="comp-val" id="writeTimeWithout">--</span>
+            </div>
+            <div class="write-row">
+              <span class="write-label">With 3 indexes</span>
+              <div class="comp-track">
+                <div class="comp-bar comp-slow" id="writeBarWith" style="width: 0"></div>
+              </div>
+              <span class="comp-val" id="writeTimeWith">--</span>
+            </div>
+          </div>
+          <p class="write-takeaway hidden" id="writeTakeaway"></p>
+        </div>
+      </section>
+
+      <section class="stage hidden" id="stageTakeaway">
+        <p class="takeaway">
+          Your app isn't slow because of the code.<br />
+          <strong>It's slow because of the missing index.</strong>
+        </p>
+        <a href="../../index.html" class="btn btn-ghost">← back to concepts</a>
+      </section>
+    </main>
+
+    <script type="module" src="script.js"></script>
+  </body>
+</html>
