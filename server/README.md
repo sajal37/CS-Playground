@@ -37,10 +37,18 @@ Server output should include:
 
 ```
 {CS} Playground Server
-http://localhost:3001
+http://127.0.0.1:3001
 ```
 
 ## Frontend
+
+Recommended (same-origin):
+
+- `http://127.0.0.1:3001/index.html`
+- `http://127.0.0.1:3001/concepts/db-indexing/`
+- `http://127.0.0.1:3001/concepts/query-optimization/`
+
+Optional separate static server on `:3000`:
 
 From the project root:
 
@@ -52,6 +60,8 @@ Then open:
 
 - `http://localhost:3000/concepts/db-indexing/`
 - `http://localhost:3000/concepts/query-optimization/`
+
+When frontend runs on `:3000`, concept scripts auto-target `http://localhost:3001/api`.
 
 ## API Endpoints
 

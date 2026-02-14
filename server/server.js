@@ -5,8 +5,31 @@ const cors = require("cors");
 const mysql = require("mysql2/promise");
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const HOST = process.env.HOST || "127.0.0.1";
+
+const DEFAULT_ALLOWED_ORIGINS = [
+  "http://127.0.0.1:3000",
+  "http://localhost:3000",
+  "http://127.0.0.1:3001",
+  "http://localhost:3001",
+];
+const ALLOWED_ORIGINS = new Set(
+  (process.env.ALLOWED_ORIGINS || DEFAULT_ALLOWED_ORIGINS.join(","))
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || ALLOWED_ORIGINS.has(origin)) return callback(null, true);
+      return callback(new Error("origin not allowed"));
+    },
+    methods: ["GET", "POST"],
+  }),
+);
+app.use(express.json({ limit: "32kb" }));
 
 app.use(express.static(path.join(__dirname, "..")));
 
@@ -20,8 +43,53 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME || "cs_playground",
   waitForConnections: true,
   connectionLimit: 10,
-  multipleStatements: true,
+  multipleStatements: false,
 });
+
+const QUERY_TIMEOUT_MS = clampInt(process.env.QUERY_TIMEOUT_MS, 5000, 500, 30000);
+const QUERY_MAX_ROWS = clampInt(process.env.QUERY_MAX_ROWS, 1000, 100, 5000);
+const RESPONSE_PREVIEW_ROWS = clampInt(process.env.RESPONSE_PREVIEW_ROWS, 100, 10, 500);
+
+function clampInt(value, fallback, min, max) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+}
+
+function normalizeSelectSql(rawSql) {
+  if (typeof rawSql !== "string") {
+    throw new Error("sql must be a string");
+  }
+
+  const trimmed = rawSql.trim();
+  if (!trimmed) {
+    throw new Error("sql is required");
+  }
+
+  const withoutTrailingSemicolon = trimmed.replace(/;+\s*$/u, "");
+  if (withoutTrailingSemicolon.includes(";")) {
+    throw new Error("multiple statements are not allowed");
+  }
+
+  if (!/^SELECT\b/i.test(withoutTrailingSemicolon)) {
+    throw new Error("Only SELECT queries allowed");
+  }
+
+  if (/\bINTO\s+(OUTFILE|DUMPFILE)\b/i.test(withoutTrailingSemicolon)) {
+    throw new Error("SELECT INTO OUTFILE/DUMPFILE is not allowed");
+  }
+
+  return withoutTrailingSemicolon;
+}
+
+function isLoopbackIp(ip) {
+  return ip === "127.0.0.1" || ip === "::1" || ip === "::ffff:127.0.0.1";
+}
+
+function requireLocalRequest(req, res, next) {
+  if (isLoopbackIp(req.ip)) return next();
+  return res.status(403).json({ error: "forbidden" });
+}
 
 const CITIES = [
   "Mumbai",
@@ -110,12 +178,13 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-app.post("/api/setup", async (req, res) => {
+app.post("/api/setup", requireLocalRequest, async (req, res) => {
   const ROW_COUNT = 100_000;
   const BATCH_SIZE = 5000;
+  let conn;
 
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
 
     await conn.query("DROP TABLE IF EXISTS users");
     await conn.query(`
@@ -160,8 +229,6 @@ app.post("/api/setup", async (req, res) => {
     );
     const cityRows = cityResult[0].cnt;
 
-    conn.release();
-
     res.json({
       status: "ok",
       totalRows: actualCount,
@@ -169,25 +236,41 @@ app.post("/api/setup", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ status: "error", message: err.message });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
-app.post("/api/query", async (req, res) => {
-  const { sql } = req.body;
-  if (!sql) return res.status(400).json({ error: "sql is required" });
-
-  const trimmed = sql.trim().toUpperCase();
-  if (!trimmed.startsWith("SELECT")) {
-    return res.status(400).json({ error: "Only SELECT queries allowed" });
+app.post("/api/query", requireLocalRequest, async (req, res) => {
+  let safeSql = "";
+  try {
+    safeSql = normalizeSelectSql(req.body?.sql);
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
   }
 
+  let conn;
   try {
+    conn = await pool.getConnection();
+
+    // Guardrails against expensive unbounded SELECTs.
+    try {
+      await conn.query("SET SESSION max_execution_time = ?", [QUERY_TIMEOUT_MS]);
+    } catch (e) {
+      void e;
+    }
+    try {
+      await conn.query("SET SESSION sql_select_limit = ?", [QUERY_MAX_ROWS]);
+    } catch (e) {
+      void e;
+    }
+
     let plan = "unknown";
     let rowsExamined = 0;
     let accessType = "unknown";
     let keyUsed = "none";
     try {
-      const [planRows] = await pool.query("EXPLAIN " + sql);
+      const [planRows] = await conn.query("EXPLAIN " + safeSql);
       if (planRows.length > 0) {
         const row = planRows[0];
         accessType = row.type || "unknown";
@@ -224,7 +307,7 @@ app.post("/api/query", async (req, res) => {
 
     let mysqlTime = null;
     try {
-      const [analyzeRows] = await pool.query("EXPLAIN ANALYZE " + sql);
+      const [analyzeRows] = await conn.query("EXPLAIN ANALYZE " + safeSql);
 
       const firstLine = analyzeRows[0] ? Object.values(analyzeRows[0])[0] : "";
       const match = firstLine.match(/actual time=([\d.]+)\.\.([\d.]+)/);
@@ -236,7 +319,7 @@ app.post("/api/query", async (req, res) => {
     }
 
     const t0 = performance.now();
-    const [rows, fields] = await pool.query(sql);
+    const [rows, fields] = await conn.query(safeSql);
     const t1 = performance.now();
     const wallTime = t1 - t0;
 
@@ -248,16 +331,19 @@ app.post("/api/query", async (req, res) => {
       time: parseFloat(time.toFixed(2)),
       plan,
       columns,
-      rows: rows.slice(0, 100),
+      rows: rows.slice(0, RESPONSE_PREVIEW_ROWS),
       rowCount: rows.length,
       rowsExamined,
+      rowLimitApplied: rows.length >= QUERY_MAX_ROWS,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
-app.post("/api/index/create", async (req, res) => {
+app.post("/api/index/create", requireLocalRequest, async (req, res) => {
   const { column } = req.body;
   if (!column) return res.status(400).json({ error: "column is required" });
 
@@ -281,7 +367,7 @@ app.post("/api/index/create", async (req, res) => {
   }
 });
 
-app.post("/api/index/drop", async (req, res) => {
+app.post("/api/index/drop", requireLocalRequest, async (req, res) => {
   const { column } = req.body;
   if (!column) return res.status(400).json({ error: "column is required" });
 
@@ -302,7 +388,7 @@ app.post("/api/index/drop", async (req, res) => {
   }
 });
 
-app.post("/api/reset", async (req, res) => {
+app.post("/api/reset", requireLocalRequest, async (req, res) => {
   try {
     const allowed = ["city", "name", "created_at"];
     for (const col of allowed) {
@@ -318,9 +404,10 @@ app.post("/api/reset", async (req, res) => {
   }
 });
 
-app.post("/api/write-test", async (req, res) => {
+app.post("/api/write-test", requireLocalRequest, async (req, res) => {
+  let conn;
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
     const WRITE_COUNT = 5000;
 
     const [maxResult] = await conn.query("SELECT MAX(id) as maxId FROM users");
@@ -377,8 +464,6 @@ app.post("/api/write-test", async (req, res) => {
       }
     }
 
-    conn.release();
-
     res.json({
       timeWithout: parseFloat(timeWithout.toFixed(2)),
       timeWith: parseFloat(timeWith.toFixed(2)),
@@ -386,10 +471,12 @@ app.post("/api/write-test", async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
-app.post("/api/qo/setup", async (req, res) => {
+app.post("/api/qo/setup", requireLocalRequest, async (req, res) => {
   const USER_COUNT = 100_000;
   const ORDER_COUNT = 200_000;
   const BATCH_SIZE = 5000;
@@ -416,8 +503,9 @@ app.post("/api/qo/setup", async (req, res) => {
     "GPU",
   ];
 
+  let conn;
   try {
-    const conn = await pool.getConnection();
+    conn = await pool.getConnection();
     await conn.query("DROP TABLE IF EXISTS orders");
     await conn.query("DROP TABLE IF EXISTS users");
 
@@ -480,16 +568,23 @@ app.post("/api/qo/setup", async (req, res) => {
 
     const [uc] = await conn.query("SELECT COUNT(*) as c FROM users");
     const [oc] = await conn.query("SELECT COUNT(*) as c FROM orders");
-    conn.release();
-
     res.json({ status: "ok", users: uc[0].c, orders: oc[0].c, indexes: 5 });
   } catch (err) {
     res.status(500).json({ status: "error", message: err.message });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
-app.listen(PORT, () => {
+app.use((err, req, res, next) => {
+  if (err && err.message === "origin not allowed") {
+    return res.status(403).json({ error: "forbidden" });
+  }
+  return next(err);
+});
+
+app.listen(PORT, HOST, () => {
   console.log(
-    `\n  {CS} Playground Server\n  ──────────────────────\n  http://localhost:${PORT}\n  http://localhost:${PORT}/concepts/db-indexing/\n  http://localhost:${PORT}/concepts/query-optimization/\n  MySQL: ${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME || "cs_playground"}\n`,
+    `\n  {CS} Playground Server\n  ──────────────────────\n  http://${HOST}:${PORT}\n  http://${HOST}:${PORT}/concepts/db-indexing/\n  http://${HOST}:${PORT}/concepts/query-optimization/\n  MySQL: ${process.env.DB_HOST || "localhost"}:${process.env.DB_PORT || 3306}/${process.env.DB_NAME || "cs_playground"}\n`,
   );
 });

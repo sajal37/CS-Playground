@@ -25,9 +25,17 @@ npm install
 npm run start
 ```
 
-The server listens on `http://localhost:3001` by default.
+The server listens on `http://127.0.0.1:3001` by default and also serves the frontend files.
 
-### 2. Serve the frontend
+### 2. Open the frontend (recommended)
+
+Open:
+
+- `http://127.0.0.1:3001/index.html`
+- `http://127.0.0.1:3001/concepts/db-indexing/`
+- `http://127.0.0.1:3001/concepts/query-optimization/`
+
+### 3. Optional: serve frontend separately on 3000
 
 From the project root:
 
@@ -40,6 +48,8 @@ Open:
 - `http://localhost:3000/index.html`
 - `http://localhost:3000/concepts/db-indexing/`
 - `http://localhost:3000/concepts/query-optimization/`
+
+When running on `:3000`, concept API calls automatically target `http://localhost:3001/api`.
 
 ## Database Setup
 

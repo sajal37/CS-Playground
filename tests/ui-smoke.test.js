@@ -40,14 +40,30 @@ expectIds(dbDoc, "concepts/db-indexing/index.html", [
 
 const qoDoc = loadDoc(path.join(root, "concepts", "query-optimization", "index.html"));
 expectIds(qoDoc, "concepts/query-optimization/index.html", [
+  "reaction",
   "terminal",
+  "stageSchema",
+  "r1Challenge",
   "btnR1Bad",
   "btnR1Good",
+  "r1BadTime",
+  "r1GoodTime",
   "btnR2Bad",
   "btnR2Good",
+  "r2BadTime",
+  "r2GoodTime",
   "btnR3Bad",
   "btnR3Good",
-  "playgroundList",
+  "r3BadTime",
+  "r3GoodTime",
+  "stagePlayground",
+  "pgSelect",
+  "pgBadSql",
+  "pgGoodSql",
+  "pgRunBad",
+  "pgRunGood",
+  "pgCompare",
+  "stageTakeaway",
 ]);
 
 console.log("UI smoke tests passed.");
